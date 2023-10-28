@@ -101,17 +101,7 @@ class TransactionController{
         return $depositSuccess;
     }
 
-
-    public function getWithdraw(){
-        if(!Auth::status()) return view('login');
-        $authUser = Auth::user();
-        $customer = (new Customer)->findByKey('', $authUser["id"]);
-        return view('Customer/withdraw', ["data" => $customer]);
-    }
-
-
     public function withdraw(){
-        $type = TransactionTypeEnum::WITHDRAW;
         $amount = intval(readline('Please insert amount in BDT: '));
         $date = Carbon::now()->toDateTimeString();
 
@@ -121,19 +111,71 @@ class TransactionController{
             return;
         }
 
-        //Inserting into File
+        $result = $this->insertWithdrawData($this->customer->getId(), (float)$amount, $date);
+        if(!$result) echo "\nSomething happened bad!\n\n";
+        else echo "\nSuccessful Withdraw\n\n";
+    }
+
+
+    public function getWithdraw(){
+        if(!Auth::status()) return view('login');
+        $authUser = Auth::user();
+        $customer = (new Customer)->findByKey('', $authUser["id"]);
+        return view('Customer/withdraw', ["data" => $customer]);
+    }
+
+    public function postWithdraw(){
+        $this->session->unset("failure");
+        $this->session->unset("success");
+        if(!Auth::status()) return view('login');
+        //Getting Authenticated customer's updated Data from Database and set With Model
+        $this->customer = new Customer();
+        $customerFromDB = $this->customer->findByKey('', Auth::user()["id"]);
+        $this->customer->set($customerFromDB["id"], $customerFromDB["name"], $customerFromDB["email"],$customerFromDB["password"], $customerFromDB["balance"]);
+
+        //Getting Transactions from Files and 
+        $this->transactions = new Transactions();
+        $this->transactions->setTransactionListOfCustomer($this->getItemsFromFile((new Transaction)->getFileName()),$this->customer);
+        
+        $amount = isset($_POST["amount"]) ? $_POST["amount"] :0;
+        $date = Carbon::now()->toDateTimeString();
+        //Check if the user have sufficient balance
+        if(!(new Validator())->isUserHaveEnounghBalance((float)$amount, $this->customer->getBalance())){
+            $this->session->set("failure", ["message" => "Withdraw operation failed, Insufficient balance", "wtime" => time()]);
+            return view('Customer/withdraw', ["data" => $this->customer->get()]);
+        }
+        
+        $result = $this->insertWithdrawData($this->customer->getId(), (float)$amount, $date);
+
+        if(!$result) $this->session->set("failure", ["message" => "Withdraw operation failed", "wtime" => time()]);
+        else $this->session->set("success", ["message" => "Withdraw successfull", "wtime" => time()]);
+
+        return view('Customer/withdraw', ["data" => $this->customer->get()]);
+    }
+
+    private function insertWithdrawData(int $userId, float $amount, string $date){
+        //Inserting Transaction in DB
+        $type = TransactionTypeEnum::WITHDRAW;
+        $transactionStatus =  (new Transaction)->create([$userId, $type->value, $amount, $date]);
+        if(!$transactionStatus) return false;
+
+        //Updating User in DB
+        $userUpdateStatus = $this->customer->update((float)$this->customer->getBalance() - $amount, $userId);
+        if(!$userUpdateStatus) return false;
+
+        //Insert Into file
         $insertIntoFileStatus = $this->transactionOperation([$type->value, $amount, $date]);
         $withdrawSuccess = false;
         if($insertIntoFileStatus){
-            //Updating Balance in file storage
-            $this->balanceUpdateOfCustomer($this->customer->getEmail(), (float) $amount, $type);
+            $this->balanceUpdateOfCustomer($this->customer->getEmail(), (float)$amount, $type);
             $this->customer->setBalance($this->customer->getBalance() - (float)$amount);
             $withdrawSuccess=true;
         }
-
-        if(!$withdrawSuccess) echo "\nSomething happened bad!\n\n";
-        else echo "\nSuccessful Withdraw\n\n";
+        return $withdrawSuccess;
     }
+
+
+    
 
     
 

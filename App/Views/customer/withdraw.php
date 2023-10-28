@@ -55,6 +55,12 @@
       <main class="-mt-32">
         <div class="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
           <div class="bg-white rounded-lg p-2">
+            <p class="flex w-full justify-center rounded-md text-green-600 text-sm font-semibold leading-6 shadow-sm">
+              <?php echo isset($_SESSION['success']['message']) && (isset($_SESSION['success']['wtime']) && (time() - $_SESSION['success']['wtime'] < 5)) ? $_SESSION['success']['message']: '' ?> 
+            </p>
+            <p class="flex w-full justify-center rounded-md text-red-600 text-sm font-semibold leading-6 shadow-sm">
+              <?php echo isset($_SESSION['failure']['message']) && (isset($_SESSION['failure']['wtime']) && (time() - $_SESSION['failure']['wtime'] < 5)) ? $_SESSION['failure']['message']: '' ?> 
+            </p>
             <!-- Current Balance Stat -->
             <dl
               class="mx-auto grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-4">
@@ -79,7 +85,7 @@
                 </h3>
                 <div class="mt-4 text-sm text-gray-500">
                   <form
-                    action="#"
+                    action="/customer/withdraw"
                     method="POST">
                     <!-- Input Field -->
                     <div class="relative mt-2 rounded-md">
@@ -105,12 +111,7 @@
                       </button>
                     </div>
                   </form>
-                  <p class="flex w-full justify-center rounded-md text-red-600 text-sm font-semibold leading-6 shadow-sm">
-                    <?php echo isset($_SESSION['success']['msg'])  ? $_SESSION['success']['msg']: '' ?> 
-                  </p>
-                  <p class="flex w-full justify-center rounded-md text-green-600 text-sm font-semibold leading-6 shadow-sm">
-                    <?php echo isset($_SESSION['failure']['msg'])  ? $_SESSION['failure']['msg']: '' ?> 
-                  </p>
+                  
                 </div>
               </div>
             </div>
