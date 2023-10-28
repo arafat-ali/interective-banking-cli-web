@@ -56,6 +56,12 @@
         <div class="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
           <div class="bg-white rounded-lg p-2">
             <!-- Current Balance Stat -->
+            <p class="flex w-full justify-center rounded-md text-green-600 text-sm font-semibold leading-6 shadow-sm">
+              <?php echo isset($_SESSION['success']['msg']) && (isset($_SESSION['success']['time']) && (time() - $_SESSION['success']['time'] < 5)) ? $_SESSION['success']['msg']: '' ?> 
+            </p>
+            <p class="flex w-full justify-center rounded-md text-red-600 text-sm font-semibold leading-6 shadow-sm">
+              <?php echo isset($_SESSION['failure']['msg']) && (isset($_SESSION['failure']['time']) && (time() - $_SESSION['failure']['time'] < 5)) ? $_SESSION['failure']['msg']: '' ?> 
+            </p>
             <dl
               class="mx-auto grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-4">
               <div
@@ -106,12 +112,7 @@
                     </div>
 
                   </form>
-                  <p class="flex w-full justify-center rounded-md text-green-600 text-sm font-semibold leading-6 shadow-sm">
-                    <?php echo isset($_SESSION['success']['msg']) && (isset($_SESSION['success']['time']) && (time() - $_SESSION['success']['time'] < 5)) ? $_SESSION['success']['msg']: '' ?> 
-                  </p>
-                  <p class="flex w-full justify-center rounded-md text-red-600 text-sm font-semibold leading-6 shadow-sm">
-                    <?php echo isset($_SESSION['failure']['msg']) && (isset($_SESSION['failure']['time']) && (time() - $_SESSION['failure']['time'] < 5)) ? $_SESSION['failure']['msg']: '' ?> 
-                  </p>
+                  
                 </div>
               </div>
             </div>

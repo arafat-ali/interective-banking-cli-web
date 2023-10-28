@@ -10,24 +10,26 @@
                     <!-- Current: "bg-emerald-700 text-white", Default: "text-white hover:bg-emerald-500 hover:bg-opacity-75" -->
                     <a
                         href="/customer/dashboard"
-                        class="bg-emerald-700 text-white rounded-md py-2 px-3 text-sm font-medium"
+                        class="<?php echo $_SERVER['REQUEST_URI'] === "/customer/dashboard" ? "bg-emerald-700 text-white" : "text-white hover:bg-emerald-500 hover:bg-opacity-75"?> rounded-md py-2 px-3 text-sm font-medium"
                         aria-current="page"
                         >Dashboard</a
                     >
                     <a
                         href="/customer/deposit"
-                        class="text-white hover:bg-emerald-500 hover:bg-opacity-75 rounded-md py-2 px-3 text-sm font-medium"
+                        class="<?php echo $_SERVER['REQUEST_URI'] === "/customer/deposit" ? "bg-emerald-700 text-white" : "text-white hover:bg-emerald-500 hover:bg-opacity-75"?> rounded-md py-2 px-3 text-sm font-medium"
                         aria-current="page"
                         >Deposit</a
                     >
                     <a
                         href="/customer/withdraw"
-                        class="text-white hover:bg-emerald-500 hover:bg-opacity-75 rounded-md py-2 px-3 text-sm font-medium"
+                        class="<?php echo $_SERVER['REQUEST_URI'] === "/customer/withdraw" ? "bg-emerald-700 text-white" : "text-white hover:bg-emerald-500 hover:bg-opacity-75"?> rounded-md py-2 px-3 text-sm font-medium"
+                        aria-current="page"
                         >Withdraw</a
                     >
                     <a
                         href="/customer/transfer"
-                        class="text-white hover:bg-emerald-500 hover:bg-opacity-75 rounded-md py-2 px-3 text-sm font-medium"
+                        class="<?php echo $_SERVER['REQUEST_URI'] === "/customer/transfer" ? "bg-emerald-700 text-white" : "text-white hover:bg-emerald-500 hover:bg-opacity-75"?> rounded-md py-2 px-3 text-sm font-medium"
+                        aria-current="page"
                         >Transfer</a
                     >
                     </div>

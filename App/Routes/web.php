@@ -46,6 +46,10 @@ Router::get('customer/withdraw', function(){
     return (new TransactionController())->getWithdraw();
 });
 
+Router::post('customer/withdraw', function(){
+    return (new TransactionController())->postWithdraw();
+});
+
 Router::get('customer/transfer', function(){
     return (new TransactionController())->transferinWeb();
 });
