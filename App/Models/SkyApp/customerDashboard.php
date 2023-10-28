@@ -14,8 +14,10 @@ class CustomerDashboard{
 
     public function __construct(Customer $customer){
         $this->authCustomer = $customer;
-        $this->transactionController = new TransactionController($this->authCustomer);
-        $this->customerController = new CustomerController($this->authCustomer);
+        $this->transactionController = new TransactionController();
+        $this->transactionController->set($this->authCustomer);
+        $this->customerController = new CustomerController();
+        $this->customerController->set($this->authCustomer);
     }
 
     public function getCurrentBalance(){

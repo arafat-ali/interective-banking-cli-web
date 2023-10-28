@@ -49,7 +49,6 @@ class AuthScreen{
             printf("\n");
 
             $this->choice = intval(readline("Enter your option: "));
-            print($this->choice);
             switch ($this->choice) {
                 case self::LOGIN:
                     $this->loginSuccess = $this->authController->login();

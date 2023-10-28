@@ -5,29 +5,20 @@ use App\Models\Customer\Customer;
 use App\Models\Admin\Admin;
 class Validator{
 
-    public function getEmailWithValidation(){
-        $inputEmail = (string) trim(readline('Please insert your email: '));
-        if (filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) return strtolower($inputEmail);
-        else {
-            echo "\nInvalid Email!\n";
-            return $this->getEmailWithValidation();
-        }
+    public function getEmailWithValidation(string $inputEmail) :string|bool{
+        if (filter_var($inputEmail, FILTER_VALIDATE_EMAIL)) 
+            return strtolower($inputEmail)??false;
 
     }
 
-    public function getPasswordWithValidation(){
-        $inputPassword = (string) readline('Please insert your password: ');
-        if (strlen($inputPassword)>=6) return $inputPassword;
-        else {
-            echo "\nPassword minimum length must be 6!\n";
-            return $this->getPasswordWithValidation();
-        }
+    public function getPasswordWithValidation(string $inputPassword){
+        if (strlen($inputPassword)>=6) return $inputPassword??false;
 
     }
 
     //Replace isUserAlreadyRegisterred    
-    public function isUserExist($email, $list):Customer|Admin|null{
-        $userInfo = null;
+    public function isUserExist($email, $list):Customer|Admin|bool{
+        $userInfo = false;
         foreach($list as $user){
             if($user->getEmail()===$email){
                 $userInfo = $user;

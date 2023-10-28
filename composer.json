@@ -7,6 +7,10 @@
     "autoload": {
         "psr-4":{
             "App\\":"App/"
-        }
+        },
+        "files": [
+            "App/Routes/web.php",
+            "App/Helpers/helper.php"
+        ]
     }
 }
