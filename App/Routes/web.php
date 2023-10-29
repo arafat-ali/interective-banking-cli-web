@@ -51,5 +51,5 @@ Router::post('customer/withdraw', function(){
 });
 
 Router::get('customer/transfer', function(){
-    return (new TransactionController())->transferinWeb();
+    return (new TransactionController())->getTransfer();
 });

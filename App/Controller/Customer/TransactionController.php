@@ -255,7 +255,7 @@ class TransactionController{
         return view('Customer/withdraw');
     }
 
-    public function transferinWeb(){
+    public function getTransfer(){
         if(!Auth::status()){
             return view('login');
         }
