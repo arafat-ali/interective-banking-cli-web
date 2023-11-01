@@ -30,7 +30,8 @@ class TransactionController{
         $this->customer = $customer;
         $this->transactions = new Transactions();
         $this->transactions->setTransactionListOfCustomer($this->getItemsFromFile((new Transaction)->getFileName()),$this->customer);
-        $this->customers = new Customers($this->getItemsFromFile($this->customer->getFileName()));
+        $this->customers = new Customers();
+        $this->customers->setCustomersfromFile($this->getItemsFromFile($this->customer->getFileName()));
     }
 
     public function getTransactions(){
@@ -65,7 +66,7 @@ class TransactionController{
         $customerFromDB = $this->customer->findByKey('', Auth::user()["id"]);
         $this->customer->set($customerFromDB["id"], $customerFromDB["name"], $customerFromDB["email"],$customerFromDB["password"], $customerFromDB["balance"]);
 
-        //Getting Transactions from Files and 
+        //Getting Transactions from Files 
         $this->transactions = new Transactions();
         $this->transactions->setTransactionListOfCustomer($this->getItemsFromFile((new Transaction)->getFileName()),$this->customer);
         
@@ -91,7 +92,7 @@ class TransactionController{
         if(!$userUpdateStatus) return false;
 
         //Insert Into file
-        $insertIntoFileStatus = $this->transactionOperation([$type->value, $amount, $date]);
+        $insertIntoFileStatus = $this->transactionOperation([$userId, $type->value, $amount, $date]);
         $depositSuccess = false;
         if($insertIntoFileStatus){
             $this->balanceUpdateOfCustomer($this->customer->getEmail(), (float)$amount, $type);
@@ -164,7 +165,7 @@ class TransactionController{
         if(!$userUpdateStatus) return false;
 
         //Insert Into file
-        $insertIntoFileStatus = $this->transactionOperation([$type->value, $amount, $date]);
+        $insertIntoFileStatus = $this->transactionOperation([$userId, $type->value, $amount, $date]);
         $withdrawSuccess = false;
         if($insertIntoFileStatus){
             $this->balanceUpdateOfCustomer($this->customer->getEmail(), (float)$amount, $type);
@@ -175,21 +176,17 @@ class TransactionController{
     }
 
 
-    
-
-    
-
     public function transfer(){
         $validator = new Validator();
-        $email = $validator->getEmailWithValidation();
-
+        $inputEmail = (string) trim(readline('Please insert email: '));
+        $email = $validator->getEmailWithValidation($inputEmail);
         $customer = $validator->isUserExist($email, $this->customers->getList());
         if($customer === null){
             printf("\nAccount with this email - %s not exists!\n", $email);
             printf("\nTransaction has failed\n");
             return false;
         }
-
+        //This customer means Logged in customer. Setting up in set function written above, called by CLI
         if($email === $this->customer->getEmail()){
             printf("\nAccount with same account not possible!\n");
             return false;
@@ -204,24 +201,105 @@ class TransactionController{
         }
 
         //Transfer Operation
-        $transferSuccess = false;
+        $transferSuccess = true;
         $date = Carbon::now()->toDateTimeString();
 
-        $withdrawStatus = $this->transactionOperation([TransactionTypeEnum::WITHDRAW->value, $amount, $date]);
-        $dipositStatus = $this->transactionOperation([TransactionTypeEnum::DIPOSIT->value, $amount, $date]);
+        //Withdraw operation From Auth User
+        //$this->customer here is auth user
+        $withdrawResult = $this->insertWithdrawData($this->customer->getId(), (float)$amount, $date);
+        if(!$withdrawResult){
+            $transferSuccess = false;
+            echo "\nWithdraw operation failed\n\n";
+            return;
+        }
 
-        if($withdrawStatus && $dipositStatus){
-            //Withdraw Balance update
-            $this->balanceUpdateOfCustomer($this->customer->getEmail(), (float) $amount, TransactionTypeEnum::WITHDRAW);
-            $this->customer->setBalance($this->customer->getBalance() - (float)$amount);
+        //Deposit operation in Deposit user account
+        //$this->customer here is deposit user
+        $depositUser = new Customer();
+        $depositUserFromDB = $depositUser->findByKey($inputEmail);
+        $depositUser->set($depositUserFromDB["id"], $depositUserFromDB["name"], $depositUserFromDB["email"],$depositUserFromDB["password"], $depositUserFromDB["balance"]);
+        $this->customer = $depositUser;
+        $depositResult = $this->insertDepositData($this->customer->getId(), (float)$amount, $date);
 
-            //Diposit Balance Update
-            $this->balanceUpdateOfCustomer($email, (float) $amount, TransactionTypeEnum::DIPOSIT);
-            $transferSuccess=true;
+        if(!$depositResult) {
+            $transferSuccess = false;
+            echo "\Deposit operation failed\n\n";
+            return;
         }
 
         if(!$transferSuccess) echo "\nSomething happened bad!\n\n";
         else echo "\nSuccessfully Transferred\n\n";
+    }
+
+    public function getTransfer(){
+        if(!Auth::status()) return view('login');
+        $authUser = Auth::user();
+        $customer = (new Customer)->findByKey('', $authUser["id"]);
+        return view('Customer/transfer', ["data" => $customer]);
+    }
+
+    public function postTransfer(){
+        $validator = new Validator();
+        $this->session->unset("failure");
+        $this->session->unset("success");
+        if(!Auth::status()) return view('login');
+
+        //Getting Authenticated customer's updated Data from Database and set With Model
+        $customer = new Customer();
+        $customerFromDB = $customer->findByKey('', Auth::user()["id"]);
+        $customer->set($customerFromDB["id"], $customerFromDB["name"], $customerFromDB["email"],$customerFromDB["password"], $customerFromDB["balance"]);
+        $this->customer = $customer;
+
+        //Getting Transactions from Files 
+        $this->transactions = new Transactions();
+        $this->transactions->setTransactionListOfCustomer($this->getItemsFromFile((new Transaction)->getFileName()),$this->customer);
+        
+        //Data from Input
+        $inputEmail = isset($_POST["email"]) ? $_POST["email"] : '';
+        $amount = isset($_POST["amount"]) ? $_POST["amount"] :0;
+        $date = Carbon::now()->toDateTimeString();
+
+        //Email validation
+        if($inputEmail == '' || !$validator->getEmailWithValidation($inputEmail)){
+            $this->session->set("error", ["email" => "Email must be valid"]);
+            return view('customer/transfer', ["data" => $this->customer->get()]);
+        }
+        
+        //Checking if there is avalable account with given email as input
+        $depositUser = new Customer();
+        $depositUserFromDB = $depositUser->findByKey($inputEmail);
+        if(!$depositUserFromDB){
+            $this->session->set("error", ["email" => "Account not found with this email!"]);
+            return view('customer/transfer', ["data" => $this->customer->get()]);
+        }
+
+        //Check if the user who is transferring have sufficient balance
+        if(!(new Validator())->isUserHaveEnounghBalance((float)$amount, $this->customer->getBalance())){
+            $this->session->set("failure", ["tmessage" => "Withdraw operation failed, Insufficient balance", "ttime" => time()]);
+            return view('customer/transfer', ["data" => $this->customer->get()]);
+        }
+        
+        //Withdraw operation From Auth User
+        //$this->customer here is auth user
+        $withdrawResult = $this->insertWithdrawData($this->customer->getId(), (float)$amount, $date);
+        if(!$withdrawResult){
+            $this->session->set("failure", ["tmessage" => "Withdraw operation failed", "ttime" => time()]);
+            return view('customer/transfer', ["data" => $this->customer->get()]);
+        }
+
+        //Deposit operation in Deposit user account
+        //$this->customer here is deposit user
+        $depositUser->set($depositUserFromDB["id"], $depositUserFromDB["name"], $depositUserFromDB["email"],$depositUserFromDB["password"], $depositUserFromDB["balance"]);
+        $this->customer = $depositUser;
+        $depositResult = $this->insertDepositData($this->customer->getId(), (float)$amount, $date);
+
+        if(!$depositResult) {
+            $this->session->set("failure", ["tmessage" => "Deposit operation failed", "ttime" => time()]);
+            return view('customer/transfer', ["data" => $customer->get()]);
+        }
+
+        $this->session->set("success", ["tmessage" => "Transfer operation successfull", "ttime" => time()]);
+        return view('Customer/transfer', ["data" => $customer->get()]);
     }
 
 
@@ -230,7 +308,7 @@ class TransactionController{
         $transaction = new Transaction();
         $insertIntoFileStatus = $this->insertNewItemIntoFile($transaction->getFileName(), [$transactionFromDB["id"], ...$input]);
         if($insertIntoFileStatus){
-            $transaction->set($this->customer, TransactionTypeEnum::fromValue($input[0]), $input[1], $input[2]);
+            $transaction->set($this->customer, TransactionTypeEnum::fromValue($input[1]), $input[2], $input[3]);
             $this->transactions->insertTransactionToList($transaction);
         }
         return $insertIntoFileStatus;
@@ -239,28 +317,5 @@ class TransactionController{
     private function balanceUpdateOfCustomer(String $email, float $updatedAmount, TransactionTypeEnum $type){
         $this->updateBalanceIntoFile($this->customer->getFileName(), $email, $updatedAmount, $type->value);
     }
-
-
-    public function dashboard(){
-        if(!Auth::status()){
-            return view('login');
-        }
-        return view('Customer/dashboard');
-    }
-
-    public function withdrawinWeb(){
-        if(!Auth::status()){
-            return view('login');
-        }
-        return view('Customer/withdraw');
-    }
-
-    public function getTransfer(){
-        if(!Auth::status()){
-            return view('login');
-        }
-        return view('Customer/transfer');
-    }
-
 
 }

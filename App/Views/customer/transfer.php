@@ -56,6 +56,12 @@
         <div class="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
           <div class="bg-white rounded-lg p-2">
             <!-- Current Balance Stat -->
+            <p class="flex w-full justify-center rounded-md text-green-600 text-sm font-semibold leading-6 shadow-sm">
+              <?php echo isset($_SESSION['success']['tmessage']) && (isset($_SESSION['success']['ttime']) && (time() - $_SESSION['success']['ttime'] < 5)) ? $_SESSION['success']['tmessage']: '' ?> 
+            </p>
+            <p class="flex w-full justify-center rounded-md text-red-600 text-sm font-semibold leading-6 shadow-sm">
+              <?php echo isset($_SESSION['failure']['tmessage']) && (isset($_SESSION['failure']['ttime']) && (time() - $_SESSION['failure']['ttime'] < 5)) ? $_SESSION['failure']['tmessage']: '' ?> 
+            </p>
             <dl
               class="mx-auto grid grid-cols-1 gap-px sm:grid-cols-2 lg:grid-cols-4">
               <div
@@ -65,7 +71,7 @@
                 </dt>
                 <dd
                   class="w-full flex-none text-3xl font-medium leading-10 tracking-tight text-gray-900">
-                  $10,115,091.00
+                  <?php printf("$%.2f", (float)$data['balance']); ?>
                 </dd>
               </div>
             </dl>
@@ -76,7 +82,7 @@
               <div class="px-4 py-5 sm:p-6">
                 <div class="mt-4 text-sm text-gray-500">
                   <form
-                    action="#"
+                    action="/customer/transfer"
                     method="POST">
                     <!-- Recipient's Email Input -->
                     <input
