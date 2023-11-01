@@ -17,6 +17,10 @@ Router::get('login', function(){
     return (new AuthController())->viewLoginPage();
 });
 
+Router::get('logout', function(){
+    return (new AuthController())->logout();
+});
+
 Router::post('login', function(){
     return (new AuthController())->postLogin();
 });
@@ -32,7 +36,7 @@ Router::post('register', function(){
 
 
 Router::get('customer/dashboard', function(){
-    return (new TransactionController())->dashboard();
+    return (new CustomerController())->dashboard();
 });
 
 Router::get('customer/deposit', function(){
@@ -52,4 +56,8 @@ Router::post('customer/withdraw', function(){
 
 Router::get('customer/transfer', function(){
     return (new TransactionController())->getTransfer();
+});
+
+Router::post('customer/transfer', function(){
+    return (new TransactionController())->postTransfer();
 });

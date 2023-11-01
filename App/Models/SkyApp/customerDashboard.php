@@ -28,7 +28,7 @@ class CustomerDashboard{
         printf("\nYour Transactions are -----\n");
         $transactions = $this->transactionController->getTransactions();
         foreach($transactions as $transaction){
-            printf("Email - %s, %s - %.2f BDT at %s\n",$this->authCustomer->getEmail(), $transaction->type->value, $transaction->amount, $transaction->date);
+            printf("Name - %s, %s - %.2f BDT at %s\n",$this->authCustomer->getName(), $transaction->type->value, $transaction->amount, $transaction->date);
         }
         printf("\n");
     }

@@ -196,4 +196,9 @@ class AuthController {
         header("Location:customer/dashboard");
     }
 
+    public function logout(){
+        $this->session->destroy();
+        header("Location:login");
+    }
+
 }
